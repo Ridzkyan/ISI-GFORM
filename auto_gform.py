@@ -105,25 +105,45 @@ def main():
             print("Semua nama sudah berhasil diproses! File list nama.txt kosong.")
             return
 
-        print(f"Sisa nama yang belum diproses: {len(names)}")
+        total_names = len(names)
+        print(f"Sisa nama yang belum diproses: {total_names}")
         
-        # Ambil hanya satu nama paling atas
-        target_name = names[0]
-        print(f"\nMemproses pengisian untuk: {target_name}...")
+        # Total waktu yang diinginkan: 7 hari = 7 * 24 * 60 * 60 detik = 604800 detik
+        TOTAL_WAKTU_DETIK = 7 * 24 * 60 * 60
         
-        is_success = fill_form(target_name)
+        # Buat bobot acak untuk setiap pengisian
+        bobot = [random.uniform(0.1, 1.0) for _ in range(total_names)]
+        total_bobot = sum(bobot)
         
-        # Jika berhasil, hapus nama tersebut dari text file agar tidak diulangi lagi
-        if is_success:
-            sisa_nama = names[1:]
-            with open('list nama.txt', 'w', encoding='utf-8') as f:
-                for n in sisa_nama:
-                    f.write(f"{n}\n")
-            print(f"Nama '{target_name}' telah dihapus dari antrian list nama.txt")
-        else:
-            print("GAGAL: Keluar dari script menggunakan exit code 1 agar GitHub Actions terbaca merah.")
-            import sys
-            sys.exit(1)
+        # Konversi bobot menjadi interval waktu (detik) yang bila dijumlahkan persis 7 hari
+        jeda_waktu = [(b / total_bobot) * TOTAL_WAKTU_DETIK for b in bobot]
+
+        for i, target_name in enumerate(names):
+            print(f"\n[{i+1}/{total_names}] Memproses pengisian untuk: {target_name}...")
+            
+            waktu_tunggu = jeda_waktu[i]
+            waktu_jam = waktu_tunggu / 3600
+            print(f"Menunggu selama {waktu_jam:.2f} jam ({int(waktu_tunggu)} detik) sebelum submit...")
+            
+            # Melakukan jeda random yang sudah dihitung
+            time.sleep(waktu_tunggu)
+            
+            is_success = fill_form(target_name)
+            
+            if is_success:
+                # Update text file
+                sisa_nama = names[i+1:]
+                with open('list nama.txt', 'w', encoding='utf-8') as f:
+                    for n in sisa_nama:
+                        f.write(f"{n}\n")
+                print(f"Nama '{target_name}' telah dihapus dari antrian list nama.txt")
+            else:
+                print("GAGAL saat mengisi form.")
+                # Opsional: Jika tidak ingin berhenti total saat gagal, hapus sys.exit atau buat flag.
+                import sys
+                sys.exit(1)
+
+        print("Berhasil menyelesaikan pengisian seluruh data dalam rentang waktu sekitar 7 hari!")
 
     except FileNotFoundError:
         print("Error: File 'list nama.txt' tidak ditemukan di folder saat ini.")
