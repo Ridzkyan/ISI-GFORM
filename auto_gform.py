@@ -44,8 +44,8 @@ def fill_form(name):
         umur_input.send_keys(random_age)
         time.sleep(1)
         
-        # 3. Klik Tombol Berikutnya
-        berikutnya_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//span[text()="Berikutnya"]')))
+        # 3. Klik Tombol Berikutnya (Bilingual support)
+        berikutnya_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//span[contains(text(),"Berikutnya") or contains(text(),"Next")]')))
         driver.execute_script("arguments[0].click();", berikutnya_button)
         time.sleep(2)
         
@@ -62,7 +62,7 @@ def fill_form(name):
                     time.sleep(0.3)
                     
         # Klik Berikutnya lagi
-        berikutnya_button2 = wait.until(EC.element_to_be_clickable((By.XPATH, '(//span[text()="Berikutnya"])[last()]')))
+        berikutnya_button2 = wait.until(EC.element_to_be_clickable((By.XPATH, '(//span[contains(text(),"Berikutnya") or contains(text(),"Next")])[last()]')))
         driver.execute_script("arguments[0].click();", berikutnya_button2)
         time.sleep(2)
         
@@ -84,7 +84,7 @@ def fill_form(name):
                     pass
 
         # Klik Submit (Kirim)
-        submit_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//span[text()="Kirim"]')))
+        submit_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//span[contains(text(),"Kirim") or contains(text(),"Submit")]')))
         driver.execute_script("arguments[0].click();", submit_button)
         time.sleep(2)
         
@@ -120,6 +120,10 @@ def main():
                 for n in sisa_nama:
                     f.write(f"{n}\n")
             print(f"Nama '{target_name}' telah dihapus dari antrian list nama.txt")
+        else:
+            print("GAGAL: Keluar dari script menggunakan exit code 1 agar GitHub Actions terbaca merah.")
+            import sys
+            sys.exit(1)
 
     except FileNotFoundError:
         print("Error: File 'list nama.txt' tidak ditemukan di folder saat ini.")
