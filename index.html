@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Dashboard - Auto GForm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: inline-block;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        .stats {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #d9534f;
+        }
+        .next-target {
+            background-color: #e7f3fe;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #31708f;
+        }
+        .log-box {
+            text-align: left;
+            background: #222;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>📊 Live Monitor Bot GForm</h1>
+        <p>Halaman ini akan otomatis menampilkan sisa nama yang belum diisi karena Github Actions memperbarui datanya setiap 2 jam.</p>
+        
+        <div class="stats" id="sisa-nama">Memuat data...</div>
+        <div class="next-target" id="next-target">Menunggu antrian...</div>
+
+        <h3 style="margin-top: 30px; text-align: left;">Daftar Sisa Antrian:</h3>
+        <div class="log-box" id="antrian-log">Loading...</div>
+    </div>
+
+    <script>
+        // Mengambil data file "list nama.txt" langsung dari repository
+        function loadData() {
+            // Tambahkan timestamp anti-cache agar selalu mendapat data terbaru
+            fetch('list nama.txt?nocache=' + new Date().getTime())
+                .then(response => {
+                    if (!response.ok) throw new Error("Gagal mengambil data");
+                    return response.text();
+                })
+                .then(data => {
+                    // Bersihkan baris kosong
+                    let names = data.split('\n').map(n => n.trim()).filter(n => n !== '');
+                    let sisa = names.length;
+
+                    if (sisa > 0) {
+                        document.getElementById('sisa-nama').innerHTML = `⏳ Sisa Nama: ${sisa} Orang`;
+                        document.getElementById('next-target').innerHTML = `👉 Target berikutnya: ${names[0]}`;
+                        document.getElementById('antrian-log').innerHTML = names.join('\n');
+                    } else {
+                        document.getElementById('sisa-nama').innerHTML = `✅ SELESAI! (0 Tersisa)`;
+                        document.getElementById('sisa-nama').style.color = "#4CAF50";
+                        document.getElementById('next-target').innerHTML = `Semua form telah berhasil dikirim.`;
+                        document.getElementById('antrian-log').innerHTML = "Tidak ada antrian.";
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('sisa-nama').innerHTML = "Gagal memuat data!";
+                    document.getElementById('antrian-log').innerHTML = "Pastikan list nama.txt ada di repository.";
+                });
+        }
+
+        // Panggil fungsi saat halaman dimuat
+        loadData();
+    </script>
+
+</body>
+</html>
