@@ -1,0 +1,40 @@
+name: GitHub Actions Bot GForm
+
+on:
+  schedule:
+    # Berjalan setiap 2 jam sekali (bisa disesuaikan)
+    # Ini akan membuat 12 nama terisi setiap hari (butuh ~8.5 hari untuk 100 nama)
+    - cron: '0 */2 * * *'
+  workflow_dispatch: # Mengizinkan untuk dijalankan manual
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Wajib agar bot bisa nge-save file list nama.txt
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium
+
+      - name: Run script
+        run: python auto_gform.py
+        
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "list nama.txt"
+          # Hanya commit kalau ada perubahan (berarti script berhasil mengisi dan menghapus 1 nama)
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto: Update list nama.txt, 1 form tersubmit"
+          git push
