@@ -105,45 +105,57 @@ def main():
             print("Semua nama sudah berhasil diproses! File list nama.txt kosong.")
             return
 
-        total_names = len(names)
-        print(f"Sisa nama yang belum diproses: {total_names}")
+        print(f"Sisa nama yang belum diproses: {len(names)}")
         
-        # Total waktu yang diinginkan: 7 hari = 7 * 24 * 60 * 60 detik = 604800 detik
-        TOTAL_WAKTU_DETIK = 7 * 24 * 60 * 60
+        # --- LOGIKA ACAK KHUSUS GITHUB ACTIONS (Target 100 per 7 hari) ---
+        # Bot dipanggil rutin setiap jam (karena cron), tapi tidak setiap dipanggil dia jalan!
+        # Rata-rata kita butuh mengisi 100 formulir dalam 168 jam (7 x 24 jam)
+        # Artinya 100 / 168 = ~0.6 form yang harus diisi per jam panggil.
+        chance = random.random()
         
-        # Buat bobot acak untuk setiap pengisian
-        bobot = [random.uniform(0.1, 1.0) for _ in range(total_names)]
-        total_bobot = sum(bobot)
-        
-        # Konversi bobot menjadi interval waktu (detik) yang bila dijumlahkan persis 7 hari
-        jeda_waktu = [(b / total_bobot) * TOTAL_WAKTU_DETIK for b in bobot]
+        if chance < 0.50:
+            to_fill = 0   # 50% Kemungkinan: Jeda TOTAL, diam tidak mengisi apapun.
+        elif chance < 0.90:
+            to_fill = 1   # 40% Kemungkinan: Mengisi 1 form pada jam ini.
+        else:
+            to_fill = 2   # 10% Kemungkinan: Mengisi 2 form langsung di jam ini.
 
-        for i, target_name in enumerate(names):
-            print(f"\n[{i+1}/{total_names}] Memproses pengisian untuk: {target_name}...")
+        # Pastikan tidak mau mengisi melebihi jumlah sisa nama
+        to_fill = min(to_fill, len(names))
+
+        if to_fill == 0:
+            print("🕒 [JEDA ACAK] Bot memutuskan untuk TIDUR / TIDAK MENGISI pada jam ini.")
+            print("Tujuannya agar terlihat seperti manusia yang kadang jeda 2-3 jam tidak mengisi sama sekali.")
+            return
             
-            waktu_tunggu = jeda_waktu[i]
-            waktu_jam = waktu_tunggu / 3600
-            print(f"Menunggu selama {waktu_jam:.2f} jam ({int(waktu_tunggu)} detik) sebelum submit...")
+        print(f"🚀 Bot memutuskan untuk MENGISI {to_fill} DATA pada jam ini.")
+        
+        for i in range(to_fill):
+            # Ambil data terbaru dari list
+            names_current = read_names('list nama.txt')
+            if not names_current: break
             
-            # Melakukan jeda random yang sudah dihitung
-            time.sleep(waktu_tunggu)
+            target_name = names_current[0]
+            print(f"\n[{i+1}/{to_fill}] Memproses pengisian untuk: {target_name}...")
             
             is_success = fill_form(target_name)
             
             if is_success:
-                # Update text file
-                sisa_nama = names[i+1:]
+                sisa_nama = names_current[1:]
                 with open('list nama.txt', 'w', encoding='utf-8') as f:
                     for n in sisa_nama:
                         f.write(f"{n}\n")
-                print(f"Nama '{target_name}' telah dihapus dari antrian list nama.txt")
+                print(f"✅ Nama '{target_name}' telah dihapus dari antrian list nama.txt")
+                
+                # Jika ada orang selanjutnya di jam yang sama, kasih jeda acak 1 sampai 3 menit (bukan jam!)
+                if i < to_fill - 1:
+                    jeda_menit = random.randint(60, 180)
+                    print(f"⏳ Jeda singkat {jeda_menit} detik sebelum mengisi orang berikutnya...")
+                    time.sleep(jeda_menit)
             else:
-                print("GAGAL saat mengisi form.")
-                # Opsional: Jika tidak ingin berhenti total saat gagal, hapus sys.exit atau buat flag.
+                print("❌ GAGAL: Keluar dari script menggunakan exit code 1 agar GitHub Actions terbaca merah.")
                 import sys
                 sys.exit(1)
-
-        print("Berhasil menyelesaikan pengisian seluruh data dalam rentang waktu sekitar 7 hari!")
 
     except FileNotFoundError:
         print("Error: File 'list nama.txt' tidak ditemukan di folder saat ini.")
