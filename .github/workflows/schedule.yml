@@ -2,9 +2,8 @@ name: GitHub Actions Bot GForm
 
 on:
   schedule:
-    # Berjalan setiap 1 jam sekali
-    # Ini akan membuat 24 nama terisi setiap hari (butuh ~4.2 hari untuk 100 nama, mendekati target 5 hari)
-    - cron: '0 * * * *'
+    # Berjalan pada menit ke-17 di setiap jam (contoh: 01:17, 02:17, 03:17, dst)
+    - cron: '17 * * * *'
   workflow_dispatch: # Mengizinkan untuk dijalankan manual
 
 jobs:
