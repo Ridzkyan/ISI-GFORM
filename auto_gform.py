@@ -107,18 +107,19 @@ def main():
 
         print(f"Sisa nama yang belum diproses: {len(names)}")
         
-        # --- LOGIKA ACAK KHUSUS GITHUB ACTIONS (Target 100 per 7 hari) ---
-        # Bot dipanggil rutin setiap jam (karena cron), tapi tidak setiap dipanggil dia jalan!
-        # Rata-rata kita butuh mengisi 100 formulir dalam 168 jam (7 x 24 jam)
-        # Artinya 100 / 168 = ~0.6 form yang harus diisi per jam panggil.
+        # --- LOGIKA ACAK KHUSUS GITHUB ACTIONS (Dipercepat) ---
+        # Karena server gratis GitHub sering "melewatkan" atau mendelay antrian cron job (tidak genap 24 kali sehari),
+        # kita harus memperbesar peluang dan jumlah isian agar angka target 100/minggu tetap tercapai.
         chance = random.random()
         
-        if chance < 0.50:
-            to_fill = 0   # 50% Kemungkinan: Jeda TOTAL, diam tidak mengisi apapun.
-        elif chance < 0.90:
-            to_fill = 1   # 40% Kemungkinan: Mengisi 1 form pada jam ini.
+        if chance < 0.15:
+            to_fill = 0   # 15% Kemungkinan: Jeda TOTAL (tetap ada peluang kosong agar natural)
+        elif chance < 0.50:
+            to_fill = 1   # 35% Kemungkinan: Mengisi 1 form.
+        elif chance < 0.85:
+            to_fill = 2   # 35% Kemungkinan: Mengisi 2 form sekaligus.
         else:
-            to_fill = 2   # 10% Kemungkinan: Mengisi 2 form langsung di jam ini.
+            to_fill = 3   # 15% Kemungkinan: Mengisi 3 form sekaligus.
 
         # Pastikan tidak mau mengisi melebihi jumlah sisa nama
         to_fill = min(to_fill, len(names))
@@ -129,6 +130,11 @@ def main():
             return
             
         print(f"🚀 Bot memutuskan untuk MENGISI {to_fill} DATA pada jam ini.")
+        
+        # Jeda AWAL acak (1 sampai 10 menit) agar tidak pernah mulai di menit yang persis sama setiap jamnya
+        initial_delay = random.randint(60, 600)
+        print(f"🤫 Menyamar sebagai manusia: Menunda eksekusi awal selama {initial_delay // 60} menit {initial_delay % 60} detik...")
+        time.sleep(initial_delay)
         
         for i in range(to_fill):
             # Ambil data terbaru dari list
@@ -147,10 +153,10 @@ def main():
                         f.write(f"{n}\n")
                 print(f"✅ Nama '{target_name}' telah dihapus dari antrian list nama.txt")
                 
-                # Jika ada orang selanjutnya di jam yang sama, kasih jeda acak 1 sampai 3 menit (bukan jam!)
+                # Jika ada orang selanjutnya di jam yang sama, pisahkan menitnya agak jauh agar menyebar
                 if i < to_fill - 1:
-                    jeda_menit = random.randint(60, 180)
-                    print(f"⏳ Jeda singkat {jeda_menit} detik sebelum mengisi orang berikutnya...")
+                    jeda_menit = random.randint(180, 900) # 3 sampai 15 menit
+                    print(f"⏳ Istirahat santai {jeda_menit // 60} menit {jeda_menit % 60} detik sebelum target berikutnya...")
                     time.sleep(jeda_menit)
             else:
                 print("❌ GAGAL: Keluar dari script menggunakan exit code 1 agar GitHub Actions terbaca merah.")
